@@ -16,6 +16,12 @@ out/
 # Gradle files
 .gradle/
 build/
+gradle/
+gradlew
+gradlew.bat
+
+# idea
+.idea
 
 # Local configuration file (sdk path, etc)
 local.properties
@@ -63,3 +69,18 @@ fastlane/Preview.html
 fastlane/screenshots
 fastlane/test_output
 fastlane/readme.md
+
+#app
+library_ui/build
+library_ui/library_ui.iml
+library_ui/proguard-rules.pro
+
+#library_ui
+library_ui/build
+library_ui/library_ui.iml
+library_ui/proguard-rules.pro
+
+#library_data
+library_ui/build
+library_ui/library_data.iml
+library_ui/proguard-rules.pro
