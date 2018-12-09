@@ -25,23 +25,30 @@ public class MainActivity extends AppCompatActivity {
     }
     ArrayList<Float> newDataList = new ArrayList<>(ecgList.size());
     float maxTemp = 0;
-    for(int i=45;i<ecgList.size()-45;i++){
-      ArrayList<Float> sortList=new ArrayList<Float>(ecgList.subList(i-45, i+45));
+    float minTemp = 0;
+    for (int i = 45; i < ecgList.size() - 45; i++) {
+      ArrayList<Float> sortList = new ArrayList<Float>(ecgList.subList(i - 45, i + 45));
       Collections.sort(sortList);
-      float mid=sortList.get(sortList.size()/2);
-      float data = (ecgList.get(i)-mid)/2;
+      float mid = sortList.get(sortList.size() / 2);
+      float data = (ecgList.get(i) - mid) / 2;
       if (data > maxTemp) {
         maxTemp = data;
       }
+      if (data < minTemp) {
+        minTemp = data;
+      }
       newDataList.add(data);
+    }
+    if (minTemp < 0) {
+      maxTemp -= minTemp;
     }
     Float[] ecgData = new Float[newDataList.size()];
     newDataList.toArray(ecgData);
     mEcgView = findViewById(R.id.main_ecg_v);
     EcgInfo info = new EcgInfo.Builder()
-            .setData(ecgData)
-            .setLeadNum(1)
-            .setRArray(maxTemp)
+            .setData(ecgData, ecgData, ecgData, ecgData)
+            .setLeadNum(4)
+            .setRArray(maxTemp, maxTemp, maxTemp, maxTemp)
             .build();
     mEcgView.update(info);
   }

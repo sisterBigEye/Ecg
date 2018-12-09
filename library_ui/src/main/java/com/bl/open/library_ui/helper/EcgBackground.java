@@ -23,7 +23,7 @@ public class EcgBackground {
     mBkgLinePaint.setStrokeWidth(mLinePaintWidth);
   }
 
-  public void drawBackground(Canvas canvas, int width, int height) {
+  public void drawBackground(Canvas canvas, int width, int height, int distance) {
     this.mWidth = width;
     this.mHeight = height;
     canvas.save();

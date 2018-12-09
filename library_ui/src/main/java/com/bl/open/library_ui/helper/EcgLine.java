@@ -15,6 +15,7 @@ public class EcgLine {
   private Paint mLinePaint;
   private int mLinePaintWidth = 3;
   private Path mLinePath;
+  private static final int BLANK = 20;
 
   public EcgLine() {
     mLinePath = new Path();
@@ -25,25 +26,36 @@ public class EcgLine {
 
   }
 
-  public void drawEcgLine(Canvas canvas, EcgInfo data) {
-    if (data == null || data.ecgDataArray == null) {
+  public void drawEcgLine(Canvas canvas, EcgInfo data, int width, int height, int distance) {
+    if (data == null || data.ecgDataArray == null || data.ecgDataArray.length == 0) {
       return;
     }
-    float lastR = 0;
-    for (float maxR : data.ecgMaxR) {
+    float lastR = BLANK;
+    if (distance < 0) {
+      distance = 0;
+    }
+    for (int line = 0; line < data.ecgLeadNum; line++) {
+      float maxR = data.ecgMaxR[line];
       canvas.save();
       canvas.translate(0, lastR);
       mLinePath.reset();
-      mLinePath.moveTo(0, maxR - data.ecgDataArray[0][0]);
-      int length = data.ecgDataArray[0].length > 2000 ? 2000 : data.ecgDataArray[0].length;
+      int maxStart = data.ecgDataArray[line].length - mWidth;
+      distance = distance > maxStart ? maxStart : distance;
+      mLinePath.moveTo(0, maxR - data.ecgDataArray[line][distance]);
+      int length = data.ecgDataArray[0].length;
       for (int i = 1; i < length; i++) {
-        mLinePath.lineTo(i, maxR - data.ecgDataArray[0][i * 2]);
+        if (i > width) {
+          break;
+        }
+        int dataIndex = i + distance;
+        if (dataIndex >= length) {
+          dataIndex = length - 1;
+        }
+        mLinePath.lineTo(i, maxR - data.ecgDataArray[line][dataIndex]);
       }
       canvas.drawPath(mLinePath, mLinePaint);
       canvas.restore();
-      lastR = maxR;
-      // Todo
-      break;
+      lastR = maxR + lastR + BLANK;
     }
   }
 

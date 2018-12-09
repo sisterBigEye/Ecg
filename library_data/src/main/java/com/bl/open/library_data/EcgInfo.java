@@ -42,4 +42,11 @@ public class EcgInfo {
     }
   }
 
+  public boolean haveData() {
+    if(ecgDataArray != null && ecgDataArray.length > 0) {
+      return true;
+    }
+    return false;
+  }
+
 }

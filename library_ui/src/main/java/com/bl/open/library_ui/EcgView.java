@@ -1,5 +1,6 @@
 package com.bl.open.library_ui;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -8,8 +9,11 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.VelocityTracker;
+import android.widget.Scroller;
 
 import com.bl.open.library_data.EcgInfo;
 import com.bl.open.library_ui.helper.EcgBackground;
@@ -26,10 +30,10 @@ public class EcgView extends SurfaceView implements SurfaceHolder.Callback {
   private EventHandler mEventHandler;
   private SurfaceHolder mHolder;
   private static final String HANDLE_THREAD_NAME = "surfaceThread";
+
   private EcgInfo mEcgInfo;
   private float mHorizontalMultiple = 1;
   private float mVerticalMultiple = 1;
-  // Todo
   private boolean isDynamic;
   private boolean isCreated;
   protected int mWidth;
@@ -37,6 +41,9 @@ public class EcgView extends SurfaceView implements SurfaceHolder.Callback {
 
   EcgBackground mEcgBackground;
   EcgLine mEcgLine;
+
+  private float mLastX;
+  private int mDistance;
 
   private Runnable mDrawRunnable = new Runnable() {
     @Override
@@ -74,6 +81,7 @@ public class EcgView extends SurfaceView implements SurfaceHolder.Callback {
   }
 
   private void init() {
+    setClickable(true);
     mEcgBackground = new EcgBackground();
     mEcgLine = new EcgLine();
 
@@ -144,10 +152,58 @@ public class EcgView extends SurfaceView implements SurfaceHolder.Callback {
       return;
     }
     canvas.drawColor(Color.WHITE);
-    mEcgBackground.drawBackground(canvas, mWidth, mHeight);
-    mEcgLine.drawEcgLine(canvas, mEcgInfo);
+    mEcgBackground.drawBackground(canvas, mWidth, mHeight, mDistance);
+    mEcgLine.drawEcgLine(canvas, mEcgInfo, mWidth, mHeight, mDistance);
     Log.d(TAG, "draw " + Thread.currentThread().getName());
     mHolder.unlockCanvasAndPost(canvas);
+  }
+
+  @SuppressLint("ClickableViewAccessibility")
+  @Override
+  public boolean onTouchEvent(MotionEvent event) {
+    if (isDynamic) {
+      return true;
+    }
+    float x = event.getX();
+    switch (event.getAction()) {
+      case MotionEvent.ACTION_DOWN:
+        mLastX = x;
+        break;
+
+      case MotionEvent.ACTION_MOVE:
+        float distance = x - mLastX;
+        if (mDistance <= 0 && distance >= 0) {
+          Log.d(TAG, "onTouchEvent() isMin, just break");
+          break;
+        }
+        boolean haveData = false;
+        int max = 0;
+        if (mEcgInfo != null && mEcgInfo.haveData()) {
+          Float[] data = mEcgInfo.ecgDataArray[0];
+          haveData = true;
+          max = data.length - mWidth;
+          if (mDistance >= (data.length - mWidth) && distance <= 0) {
+            Log.d(TAG, "onTouchEvent() isMax - just break");
+            break;
+          }
+        }
+        mDistance -= distance;
+        Log.d(TAG, "onTouchEvent() --- distance = " + distance + "-mDistance=" + mDistance);
+        if (mDistance < 0) {
+          mDistance = 0;
+        }
+        if (haveData && mDistance > max) {
+          mDistance = max;
+        }
+        mLastX = x;
+        justPost();
+        break;
+
+      case MotionEvent.ACTION_UP:
+      case MotionEvent.ACTION_CANCEL:
+        break;
+    }
+    return super.onTouchEvent(event);
   }
 
   private static class EventHandler extends Handler {
