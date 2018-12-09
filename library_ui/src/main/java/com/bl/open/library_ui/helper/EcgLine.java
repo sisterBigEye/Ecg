@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
 
+import com.bl.open.library_data.EcgBean;
 import com.bl.open.library_data.EcgInfo;
 
 public class EcgLine {
@@ -26,23 +27,24 @@ public class EcgLine {
 
   }
 
-  public void drawEcgLine(Canvas canvas, EcgInfo data, int width, int height, int distance) {
-    if (data == null || data.ecgDataArray == null || data.ecgDataArray.length == 0) {
+  public void drawEcgLine(Canvas canvas, EcgBean data, int width, int height, int distance) {
+    if (data == null || data.getWaveData() == null || data.getWaveData().get(0) == null) {
       return;
     }
     float lastR = BLANK;
     if (distance < 0) {
       distance = 0;
     }
-    for (int line = 0; line < data.ecgLeadNum; line++) {
+    for (int line = 0; line < data.getWaveData().size(); line++) {
+      Float[] value = data.getWaveData().get(line).getValue();
       float maxR = data.ecgMaxR[line];
       canvas.save();
       canvas.translate(0, lastR);
       mLinePath.reset();
-      int maxStart = data.ecgDataArray[line].length - mWidth;
+      int maxStart = value.length - mWidth;
       distance = distance > maxStart ? maxStart : distance;
-      mLinePath.moveTo(0, maxR - data.ecgDataArray[line][distance]);
-      int length = data.ecgDataArray[0].length;
+      mLinePath.moveTo(0, maxR - value[distance]);
+      int length = value.length;
       for (int i = 1; i < length; i++) {
         if (i > width) {
           break;
@@ -51,7 +53,7 @@ public class EcgLine {
         if (dataIndex >= length) {
           dataIndex = length - 1;
         }
-        mLinePath.lineTo(i, maxR - data.ecgDataArray[line][dataIndex]);
+        mLinePath.lineTo(i, maxR - value[dataIndex]);
       }
       canvas.drawPath(mLinePath, mLinePaint);
       canvas.restore();

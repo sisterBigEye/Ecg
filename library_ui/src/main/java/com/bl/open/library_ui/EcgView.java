@@ -15,6 +15,7 @@ import android.view.SurfaceView;
 import android.view.VelocityTracker;
 import android.widget.Scroller;
 
+import com.bl.open.library_data.EcgBean;
 import com.bl.open.library_data.EcgInfo;
 import com.bl.open.library_ui.helper.EcgBackground;
 import com.bl.open.library_ui.helper.EcgLine;
@@ -31,7 +32,7 @@ public class EcgView extends SurfaceView implements SurfaceHolder.Callback {
   private SurfaceHolder mHolder;
   private static final String HANDLE_THREAD_NAME = "surfaceThread";
 
-  private EcgInfo mEcgInfo;
+  private EcgBean mEcgBean;
   private float mHorizontalMultiple = 1;
   private float mVerticalMultiple = 1;
   private boolean isDynamic;
@@ -115,17 +116,17 @@ public class EcgView extends SurfaceView implements SurfaceHolder.Callback {
   }
 
 
-  public void update(EcgInfo info) {
-    this.update(info, mHorizontalMultiple, mVerticalMultiple);
+  public void update(EcgBean bean) {
+    this.update(bean, mHorizontalMultiple, mVerticalMultiple);
   }
 
-  public void update(EcgInfo info, float horizontalMultiple, float verticalMultiple) {
+  public void update(EcgBean info, float horizontalMultiple, float verticalMultiple) {
     this.update(info, horizontalMultiple, verticalMultiple, false);
   }
 
-  public void update(EcgInfo info, float horizontalMultiple, float verticalMultiple, boolean isDynamic) {
-    this.mEcgInfo = info != null ? info : mEcgInfo;
-    if (mEcgInfo == null || mEcgInfo.ecgDataArray == null || mEcgInfo.ecgDataArray.length == 0) {
+  public void update(EcgBean info, float horizontalMultiple, float verticalMultiple, boolean isDynamic) {
+    this.mEcgBean = info != null ? info : mEcgBean;
+    if (mEcgBean == null || mEcgBean.getWaveData() == null || mEcgBean.getWaveData().size() == 0) {
       return;
     }
     this.mHorizontalMultiple = horizontalMultiple;
@@ -153,7 +154,7 @@ public class EcgView extends SurfaceView implements SurfaceHolder.Callback {
     }
     canvas.drawColor(Color.WHITE);
     mEcgBackground.drawBackground(canvas, mWidth, mHeight, mDistance);
-    mEcgLine.drawEcgLine(canvas, mEcgInfo, mWidth, mHeight, mDistance);
+    mEcgLine.drawEcgLine(canvas, mEcgBean, mWidth, mHeight, mDistance);
     Log.d(TAG, "draw " + Thread.currentThread().getName());
     mHolder.unlockCanvasAndPost(canvas);
   }
@@ -178,8 +179,8 @@ public class EcgView extends SurfaceView implements SurfaceHolder.Callback {
         }
         boolean haveData = false;
         int max = 0;
-        if (mEcgInfo != null && mEcgInfo.haveData()) {
-          Float[] data = mEcgInfo.ecgDataArray[0];
+        if (mEcgBean != null && mEcgBean.haveData()) {
+          Float[] data = mEcgBean.getWaveData().get(0).getValue();
           haveData = true;
           max = data.length - mWidth;
           if (mDistance >= (data.length - mWidth) && distance <= 0) {
