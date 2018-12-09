@@ -3,7 +3,11 @@ package com.bl.open.ecg;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
+import com.bl.open.library_data.EcgInfo;
 import com.bl.open.library_ui.EcgView;
+
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -15,17 +19,100 @@ public class MainActivity extends AppCompatActivity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
     String[] dataArray = rawData.split(" ");
-    float[] ecgArray = new float[dataArray.length];
-    for(int i = 0; i < dataArray.length; i ++) {
-      ecgArray[i] = Float.valueOf(dataArray[i]);
+    ArrayList<Float> ecgList = new ArrayList<>(dataArray.length + 100);
+    for (int i = 0; i < dataArray.length; i++) {
+      ecgList.add(Float.valueOf(dataArray[i]));
     }
+    ArrayList<Float> newDataList = new ArrayList<>(ecgList.size());
+    float maxTemp = 0;
+    for(int i=45;i<ecgList.size()-45;i++){
+      ArrayList<Float> sortList=new ArrayList<Float>(ecgList.subList(i-45, i+45));
+      Collections.sort(sortList);
+      float mid=sortList.get(sortList.size()/2);
+      float data = (ecgList.get(i)-mid)/2;
+      if (data > maxTemp) {
+        maxTemp = data;
+      }
+      newDataList.add(data);
+    }
+    Float[] ecgData = new Float[newDataList.size()];
+    newDataList.toArray(ecgData);
     mEcgView = findViewById(R.id.main_ecg_v);
-    mEcgView.update(ecgArray, 0, 0, 0);
+    EcgInfo info = new EcgInfo.Builder()
+            .setData(ecgData)
+            .setLeadNum(1)
+            .setRArray(maxTemp)
+            .build();
+    mEcgView.update(info);
   }
 
   @Override
   protected void onResume() {
     super.onResume();
-    mEcgView.update(null, 0, 0, 0);
+    mEcgView.update(null);
   }
+
+  /*public static int[] SoAndChan(int[] voltages) {
+
+    // initial maxi should be the max slope of the first 250 points.
+    double initial_maxi = -2 * voltages[0] - voltages[1] + voltages[3] + 2 * voltages[4];
+    for (int i = 2; i < SAMPLE_RATE; i++) {
+      double slope = -2 * voltages[i - 2] - voltages[i - 1] + voltages[i + 1] + 2 * voltages[i + 2];
+      if (slope > initial_maxi)
+        initial_maxi = slope;
+    }
+
+    // Since we don't know how many R peaks we'll have, we'll use an ArrayList
+    ArrayList<Integer> rTime = new ArrayList<>();
+    // set initial maxi
+    double maxi = initial_maxi;
+    boolean first_satisfy = false;
+    boolean second_satisfy = false;
+    int onset_point = 0;
+    int R_point = 0;
+    boolean rFound = false;
+    // I want a way to plot all the r dots that are found...
+    int[] rExist = new int[voltages.length];
+    // First two voltages should be ignored because we need rom length
+    for (int i = 2; i < voltages.length - 2; i++) {
+      // Last two voltages should be ignored too
+      if (!first_satisfy || !second_satisfy) {// Get Slope:
+        double slope = -2 * voltages[i - 2] - voltages[i - 1] + voltages[i + 1] + 2 * voltages[i + 2];
+        // Get slope threshold
+        double slope_threshold = (THRESHOLD_PARAM / 16) * maxi;
+        // We need two consecutive datas that satisfy slope > slope_threshold
+        if (slope > slope_threshold) {
+          if (!first_satisfy) {
+            first_satisfy = true;
+            onset_point = i;
+          } else {
+            if (!second_satisfy) {
+              second_satisfy = true;
+            }
+          }
+        }
+      }
+      // We found the ONSET already, now we find the R point
+      else {
+
+        if (voltages[i] < voltages[i - 1]) {
+          rTime.add(i - 1);
+          R_point = i - 1;
+          // Since we have the R, we should reset
+          first_satisfy = false;
+          second_satisfy = false;
+          // and update maxi
+          double first_maxi = voltages[R_point] - voltages[onset_point];
+          maxi = ((first_maxi - maxi) / FILTER_PARAMETER) + maxi;
+        }
+      }
+    }
+    int[] results = new int[rTime.size()];
+    // Now we convert the ArrayList to an array and return it
+    for (int i = 0; i < rTime.size(); i++) {
+      results[i] = rTime.get(i);
+    }
+    return results;
+  }*/
+
 }
